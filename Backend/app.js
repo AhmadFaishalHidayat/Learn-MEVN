@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import authRouter from "./router/authRouter.js";
 
 dotenv.config();
 
@@ -22,6 +23,9 @@ app.get("/", (req, res) => {
     message: "Message dari Express",
   });
 });
+
+//Parent Router
+app.use("/api/v1/auth", authRouter)
 
 app.listen(port, () => {
   console.log(`Aplikasi berjalan di port ${port}`);
