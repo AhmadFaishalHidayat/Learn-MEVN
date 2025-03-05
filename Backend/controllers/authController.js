@@ -28,13 +28,13 @@ const createSendToken = (user, statusCode, res) => {
 
 export default class authController {
   static registerUser = asyncHandler(async (req, res) => {
-    const isFirstUser = (await User.countDocuments()) === 0
+    const isFirstUser = (await User.countDocuments()) === 0;
     const role = isFirstUser ? "admin" : "user";
     const createUser = await User.create({
       name: req.body.name,
       email: req.body.email,
       password: req.body.password,
-      role
+      role,
     });
     console.log("Create User Done");
     createSendToken(createUser, 201, res);
@@ -52,27 +52,37 @@ export default class authController {
     const user = await User.findOne({ email });
     console.log("User", user);
     if (user && (await user.comparePassword(password))) {
+      console.log("User", user);
       createSendToken(user, 200, res);
     } else {
+      res.status(400);
       throw new Error("Invalid email or password");
     }
   });
 
   static async logoutUser(req, res) {
-    try {
-      res.status(200).json({ message: "Logout User Done" });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Internal Server Error" });
-    }
+    res.cookie("jwt", "", {
+      expires: new Date(0),
+      httpOnly: true,
+      security: false
+    });
+    res.status(200).json({
+      message: "Logged out",
+    });
   }
 
   static async getUser(req, res) {
-    try {
-      res.status(200).json({ message: "Get User Done" });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Internal Server Error" });
+    const user = await User.findById(req.user.id).select({ password: 0 });
+    if (user) {
+      return res.status(200).json({
+        data: {
+          user,
+        },
+      });
+    } else {
+      return res.status(404).json({
+        message: "User not found",
+      });
     }
   }
 }
