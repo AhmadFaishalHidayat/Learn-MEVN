@@ -28,10 +28,13 @@ const createSendToken = (user, statusCode, res) => {
 
 export default class authController {
   static registerUser = asyncHandler(async (req, res) => {
+    const isFirstUser = (await User.countDocuments()) === 0
+    const role = isFirstUser ? "admin" : "user";
     const createUser = await User.create({
       name: req.body.name,
       email: req.body.email,
       password: req.body.password,
+      role
     });
     console.log("Create User Done");
     createSendToken(createUser, 201, res);
