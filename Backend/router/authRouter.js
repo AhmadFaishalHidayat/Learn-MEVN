@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/register", authController.registerUser);
 
 // post /api/v1/auth/login
-// router.post("/login", authController.loginUser);
+router.post("/login", authController.loginUser);
 
 // // get /api/v1/auth/logout
 // router.get("/logout", authController.logoutUser);

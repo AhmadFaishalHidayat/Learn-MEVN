@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import asyncHandler from "../middleware/asyncHandler.js";
+import e from "express";
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -25,29 +26,34 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
-
 export default class authController {
-  
-  static registerUser = asyncHandler ( async (req, res) => {
-    
-      const createUser = await User.create({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-      });
-      console.log("Create User Done");
-      createSendToken(createUser, 201, res);
-    }
-  );
+  static registerUser = asyncHandler(async (req, res) => {
+    const createUser = await User.create({
+      name: req.body.name,
+      email: req.body.email,
+      password: req.body.password,
+    });
+    console.log("Create User Done");
+    createSendToken(createUser, 201, res);
+  });
 
-  static async loginUser(req, res) {
-    try {
-      res.status(200).json({ message: "Login User Done" });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Internal Server Error" });
+  static loginUser = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "email and password are required" });
     }
-  }
+
+    const user = await User.findOne({ email });
+    console.log("User", user);
+    if (user && (await user.comparePassword(password))) {
+      createSendToken(user, 200, res);
+    } else {
+      throw new Error("Invalid email or password");
+    }
+  });
 
   static async logoutUser(req, res) {
     try {
@@ -57,7 +63,7 @@ export default class authController {
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
-  
+
   static async getUser(req, res) {
     try {
       res.status(200).json({ message: "Get User Done" });
